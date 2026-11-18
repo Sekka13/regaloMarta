@@ -6,6 +6,7 @@ import { CharacterVideo } from './CharacterVideo';
 import { BeautyArcade } from './BeautyArcade';
 import { DialogFrame } from './DialogFrame';
 import { LevelChallenge } from './LevelChallenge';
+import { playSoundAndVibrate } from '../utils/soundHelper';
 import type { MartaDefinition } from '../types/game';
 
 type GameDialogProps = {
@@ -22,6 +23,7 @@ export function GameDialog({ marta, completedLevels, celebrateUnlock, videosPaus
   const celebrated = useRef(false);
   const isComplete = Boolean(marta && completedLevels >= marta.levels.length);
   const titleId = marta ? `game-title-${marta.id}` : 'game-title-closed';
+  const isLastLevel = marta ? completedLevels >= marta.levels.length - 1 : false;
 
   useEffect(() => {
     celebrated.current = false;
@@ -30,6 +32,7 @@ export function GameDialog({ marta, completedLevels, celebrateUnlock, videosPaus
   useEffect(() => {
     if (!isComplete || !celebrateUnlock || reduceMotion || celebrated.current) return;
     celebrated.current = true;
+    playSoundAndVibrate('victory_game');
     void confetti({
       particleCount: 120,
       spread: 82,
@@ -92,18 +95,21 @@ export function GameDialog({ marta, completedLevels, celebrateUnlock, videosPaus
                   <span style={{ width: `${(completedLevels / marta.levels.length) * 100}%` }} />
                 </div>
               </div>
+              
               {marta.id === 'beauty' ? (
                 <BeautyArcade
                   key={`beauty-level-${completedLevels}`}
                   level={marta.levels[completedLevels]}
                   completedLevels={completedLevels}
                   onLevelComplete={onSolved}
+                  isLastLevel={isLastLevel}
                 />
               ) : (
                 <LevelChallenge
                   key={`${marta.id}-level-${completedLevels}`}
                   level={marta.levels[completedLevels]}
                   onSolved={onSolved}
+                  isLastLevel={isLastLevel}
                 />
               )}
             </motion.section>

@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Heart, Pause, Play, Sparkles } from 'lucide-react';
-import brushIcon from '../assets/icons/brush.png';
-import lipstickIcon from '../assets/icons/lipstick.png';
-import mascaraIcon from '../assets/icons/mascara.png';
-import perfumeIcon from '../assets/icons/perfume.png';
-import onionIcon from '../assets/icons/onion.png';
-import poopIcon from '../assets/icons/poop.png';
-import spiderIcon from '../assets/icons/spider.png';
+import brushIcon from '../../public/icons/brush.png';
+import lipstickIcon from '../../public/icons/lipstick.png';
+import mascaraIcon from '../../public/icons/mascara.png';
+import perfumeIcon from '../../public/icons/perfume.png';
+import onionIcon from '../../public/icons/onion.png';
+import poopIcon from '../../public/icons/poop.png';
+import spiderIcon from '../../public/icons/spider.png';
 import type { BeautyArcadeLevel } from '../types/game';
 
 type ArcadeIcon = {
@@ -36,6 +36,7 @@ type BeautyArcadeProps = {
   level: BeautyArcadeLevel;
   completedLevels: number;
   onLevelComplete: () => void;
+  isLastLevel: boolean;
 };
 
 const GOOD_COSMETICS: ArcadeIcon[] = [
@@ -48,7 +49,6 @@ const GOOD_COSMETICS: ArcadeIcon[] = [
 const TRAPS: ArcadeIcon[] = [
   { id: 'poop', label: 'Trampa', kind: 'trap', src: poopIcon },
   { id: 'onion', label: 'Trampa', kind: 'trap', src: onionIcon },
-  // Este PNG aún no está en src/assets/icons; el emoji mantiene jugable la trampa.
   { id: 'spider', label: 'Trampa', kind: 'trap', src: spiderIcon },
 ];
 

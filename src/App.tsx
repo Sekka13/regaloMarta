@@ -7,6 +7,7 @@ import { CalendarBoard } from './components/CalendarBoard';
 import { MartaBadgeRail } from './components/MartaBadgeRail';
 import { GameDialog } from './components/GameDialog';
 import { FinalDialog, GiftDialog } from './components/CelebrationDialogs';
+import { playSoundAndVibrate } from './utils/soundHelper';
 import type { MartaId } from './types/game';
 
 type Screen = 'welcome' | 'rules' | 'board';
@@ -91,6 +92,30 @@ function RulesScreen({ onContinue }: { onContinue: () => void }) {
 }
 
 export default function App() {
+  // --- DELEGACIÓN GLOBAL DE EVENTOS PARA BOTONES ---
+  // Hace que cualquier <button> o [role="button"] reproduzca 'pop' automáticamente,
+  // permitiendo sobrescribirlo con data-sound="nombre" o silenciarlo con data-sound="none".
+  useEffect(() => {
+    const handleGlobalClick = (event: PointerEvent) => {
+      const target = event.target as HTMLElement;
+      const button = target.closest('button') || target.closest('[role="button"]');
+
+      if (button) {
+        const customSound = button.getAttribute('data-sound');
+        if (customSound === 'none') return; // Si es silencioso, no hace nada
+        
+        const soundToPlay = (customSound as any) || 'pop';
+        playSoundAndVibrate(soundToPlay);
+      }
+    };
+
+    window.addEventListener('pointerdown', handleGlobalClick);
+    return () => window.removeEventListener('pointerdown', handleGlobalClick);
+  }, []);
+  // ------------------------------------------------
+
+
+
   const [progress, setProgress] = useGameProgress();
   const [screen, setScreen] = useState<Screen>(() => progress.rulesSeen ? 'board' : 'welcome');
   const [activeMartaId, setActiveMartaId] = useState<MartaId | null>(null);

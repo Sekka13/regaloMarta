@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { Check, RotateCcw } from 'lucide-react';
 import type { GameLevel } from '../types/game';
+import { playSoundAndVibrate } from '../utils/soundHelper'; // 👈 1. Importamos el helper de sonido
 
 type LevelChallengeProps = {
   level: GameLevel;
   onSolved: () => void;
+  isLastLevel: boolean;
 };
 
 function normalizeAnswer(value: string) {
@@ -15,42 +17,47 @@ function normalizeAnswer(value: string) {
     .toLocaleLowerCase('es');
 }
 
-export function LevelChallenge({ level, onSolved }: LevelChallengeProps) {
+export function LevelChallenge({ level, onSolved, isLastLevel }: LevelChallengeProps) {
   const [selected, setSelected] = useState('');
   const [answer, setAnswer] = useState('');
   const [orderedItems, setOrderedItems] = useState<string[]>([]);
   const [notice, setNotice] = useState('');
 
-  const submitChoice = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (level.kind !== 'choice') return;
-    if (selected === level.answer) {
-      onSolved();
-      return;
-    }
-    setNotice('¡Casi! Prueba otra respuesta.');
-  };
-
-  const submitWord = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (level.kind !== 'word') return;
-    if (normalizeAnswer(answer) === normalizeAnswer(level.answer)) {
-      onSolved();
-      return;
-    }
-    setNotice('Esa no era. ¡Inténtalo otra vez!');
-  };
-
-  const submitOrder = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (level.kind !== 'order') return;
-    const isCorrect = orderedItems.every((item, index) => item === level.correctOrder[index])
-      && orderedItems.length === level.correctOrder.length;
+  // 🎯 2. Función centralizada para manejar el resultado del nivel
+  const handleCheckResult = (isCorrect: boolean, errorMessage: string) => {
     if (isCorrect) {
-      onSolved();
-      return;
+      if(!isLastLevel){
+        playSoundAndVibrate('level_up'); // 🌟 Sonido de acierto
+      } 
+      onSolved();                     // Avanza de nivel
+    } else {
+      playSoundAndVibrate('fail_level'); // ❌ Sonido de fallo
+      setNotice(errorMessage);           // Muestra el mensaje de error correspondiente
     }
-    setNotice('El orden no está del todo bien. Puedes quitar el último paso y probar de nuevo.');
+  };
+
+  // 🎯 3. Función unificada handleSubmit que sustituye a los 3 submits antiguos
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    let isCorrect = false;
+    let errorMessage = '';
+
+    if (level.kind === 'choice') {
+      isCorrect = selected === level.answer;
+      errorMessage = '¡Casi! Prueba otra respuesta.';
+    } 
+    else if (level.kind === 'word') {
+      isCorrect = normalizeAnswer(answer) === normalizeAnswer(level.answer);
+      errorMessage = 'Esa no era. ¡Inténtalo otra vez!';
+    } 
+    else if (level.kind === 'order') {
+      isCorrect = orderedItems.every((item, index) => item === level.correctOrder[index])
+        && orderedItems.length === level.correctOrder.length;
+      errorMessage = 'El orden no está del todo bien. Puedes quitar el último paso y probar de nuevo.';
+    }
+
+    handleCheckResult(isCorrect, errorMessage);
   };
 
   const toggleOrderItem = (item: string) => {
@@ -67,7 +74,7 @@ export function LevelChallenge({ level, onSolved }: LevelChallengeProps) {
 
   if (level.kind === 'choice') {
     return (
-      <form className="challenge-form" onSubmit={submitChoice}>
+      <form className="challenge-form" onSubmit={handleSubmit}>
         <p className="challenge-prompt">{level.prompt}</p>
         {level.hint && <p className="challenge-hint">{level.hint}</p>}
         <div className="answer-options">
@@ -86,8 +93,9 @@ export function LevelChallenge({ level, onSolved }: LevelChallengeProps) {
           ))}
         </div>
         <p className="challenge-feedback" role="status" aria-live="polite">{notice}</p>
-        <button className="button button-primary challenge-submit" type="submit" disabled={!selected}>
-          Comprobar respuesta <Check size={18} aria-hidden="true" />
+        {/* 👈 4. Añadimos data-sound="none" aquí para apagar el pop global */}
+        <button className="button button-primary challenge-submit" type="submit" disabled={!selected} data-sound="none">
+          Comporbar respuesta <Check size={18} aria-hidden="true" />
         </button>
       </form>
     );
@@ -95,7 +103,7 @@ export function LevelChallenge({ level, onSolved }: LevelChallengeProps) {
 
   if (level.kind === 'word') {
     return (
-      <form className="challenge-form" onSubmit={submitWord}>
+      <form className="challenge-form" onSubmit={handleSubmit}>
         <p className="challenge-prompt">{level.prompt}</p>
         <p className="challenge-hint">{level.clue}</p>
         <label className="field-label" htmlFor="hidden-word-answer">Escribe la palabra</label>
@@ -112,7 +120,8 @@ export function LevelChallenge({ level, onSolved }: LevelChallengeProps) {
           required
         />
         <p className="challenge-feedback" role="status" aria-live="polite">{notice}</p>
-        <button className="button button-primary challenge-submit" type="submit" disabled={!answer.trim()}>
+        {/* 👈 4. Añadimos data-sound="none" aquí también */}
+        <button className="button button-primary challenge-submit" type="submit" disabled={!answer.trim()} data-sound="none">
           Probar palabra <Check size={18} aria-hidden="true" />
         </button>
       </form>
@@ -120,7 +129,7 @@ export function LevelChallenge({ level, onSolved }: LevelChallengeProps) {
   }
 
   return (
-    <form className="challenge-form" onSubmit={submitOrder}>
+    <form className="challenge-form" onSubmit={handleSubmit}>
       <p className="challenge-prompt">{level.prompt}</p>
       <p className="challenge-hint">{level.detail}</p>
       <ol className="order-sequence" aria-label="Pasos elegidos en orden">
@@ -152,7 +161,8 @@ export function LevelChallenge({ level, onSolved }: LevelChallengeProps) {
         <button className="button button-secondary" type="button" onClick={resetOrder} disabled={orderedItems.length === 0}>
           <RotateCcw size={16} aria-hidden="true" /> Reiniciar
         </button>
-        <button className="button button-primary challenge-submit" type="submit" disabled={orderedItems.length !== level.correctOrder.length}>
+        {/* 👈 4. Añadimos data-sound="none" en el botón de comprobar orden */}
+        <button className="button button-primary challenge-submit" type="submit" disabled={orderedItems.length !== level.correctOrder.length} data-sound="none">
           Comprobar orden <Check size={18} aria-hidden="true" />
         </button>
       </div>
