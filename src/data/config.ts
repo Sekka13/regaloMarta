@@ -24,10 +24,69 @@ export const giftNumbersByMarta: Record<MartaId, number[]> = {
   beauty: [7, 14, 21, 23],
 };
 
-export const calendarOrder = [
-  13, 2, 17, 1, 20, 5, 23, 8, 11, 24, 4, 19,
-  6, 14, 9, 22, 3, 16, 10, 21, 7, 15, 12, 18,
+export const calendarLayout = [
+  [13,13, 2,17,17, 1],
+  [13,13, 5, 5,20,20],
+
+  [23, 8, 8,11,11,24],
+  [23,4, 4,19,19,24],
+
+  [ 6,14, 9,22,22,22],
+  [ 3, 3,16,10,21,21],
+
+  [ 7,15,15,12,18,18]
 ];
+
+export function buildCalendarTiles(layout:number[][]) {
+  const map = new Map<number,{
+    number:number;
+    row:number;
+    col:number;
+    rowSpan:number;
+    colSpan:number;
+  }>();
+
+  layout.forEach((line,row) => {
+    line.forEach((value,col) => {
+
+      if (!map.has(value)) {
+
+        map.set(value,{
+          number:value,
+          row,
+          col,
+          rowSpan:1,
+          colSpan:1
+        });
+
+      } else {
+
+        const tile = map.get(value)!;
+
+        tile.rowSpan =
+          Math.max(tile.rowSpan,row - tile.row + 1);
+
+        tile.colSpan =
+          Math.max(tile.colSpan,col - tile.col + 1);
+      }
+
+    });
+  });
+
+  return Array
+    .from(map.values())
+    .sort((a,b)=>a.number-b.number);
+}
+
+export const martaColorMap: Record<string, string> = {
+  coral: '#ff6481',
+  pink: '#ff9cba',
+  yellow: '#ffd84b',
+  orange: '#ff9c52',
+  blue: '#8acbf4',
+  purple: '#be9afa',
+  lilac: '#baa9ff',
+};
 
 export const martas: MartaDefinition[] = [
   {
@@ -176,4 +235,16 @@ export const martas: MartaDefinition[] = [
   },
 ];
 
-export const martaById = Object.fromEntries(martas.map((marta) => [marta.id, marta])) as Record<MartaId, MartaDefinition>;
+export const giftOwnerByNumber = Object.fromEntries(
+  martas.flatMap((marta) =>
+    marta.giftNumbers.map((number) => [
+      number,
+      marta.id,
+    ])
+  )
+) as Record<number, MartaId>;
+
+
+export const martaById = Object.fromEntries(
+  martas.map((marta) => [marta.id, marta])
+) as Record<MartaId, MartaDefinition>;

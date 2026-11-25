@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=BBH+Bogle&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Stack+Sans+Notch:wght@200..700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -231,38 +232,265 @@ h1, h2, h3 { color: var(--ink); }
 .motion-toggle { min-block-size: 34px; flex: 0 0 auto; padding: .38rem .65rem; border: 1.5px solid var(--ink); border-radius: 999px; background: #fff; box-shadow: 2px 2px 0 var(--ink); font-size: .68rem; font-weight: 900; cursor: pointer; transition: background-color 150ms ease, transform 150ms ease; }
 .motion-toggle:hover { background: #f0ebff; transform: translateY(-1px); }
 
-.calendar-section { padding: 1rem .9rem .95rem; border: var(--line); border-radius: 23px; background: rgb(255 253 248 / 88%); box-shadow: 3px 4px 0 var(--ink); }
+.calendar-section {
+  padding: 1rem .9rem .95rem;
+  border: var(--line);
+  border-radius: 23px;
+  background: rgb(255 253 248 / 88%);
+  box-shadow: 3px 4px 0 var(--ink);
+}
 .calendar-title-row { align-items: center; margin-block-end: .8rem; }
 .calendar-title-row h2 { font-size: 1.27rem; }
 .calendar-key { display: grid; gap: .22rem; color: #898390; font-size: .58rem; font-weight: 800; }
 .calendar-key span { display: flex; align-items: center; gap: .25rem; }
 .calendar-key svg { color: #756f7c; }
-.calendar-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem; margin: 0; padding: 0; list-style: none; }
-.calendar-cell { min-inline-size: 0; }
-.calendar-tile { position: relative; display: flex; inline-size: 100%; min-block-size: 88px; aspect-ratio: .83; flex-direction: column; justify-content: space-between; gap: .2rem; padding: .45rem .38rem .5rem; overflow: clip; border: 1.5px solid var(--ink); border-radius: 15px; box-shadow: 2px 3px 0 var(--ink); text-align: start; cursor: pointer; transition: box-shadow 150ms ease, transform 150ms ease, filter 150ms ease; }
-.calendar-tile:not(.tile-locked):hover { transform: translateY(-2px) rotate(-1deg); box-shadow: 3px 5px 0 var(--ink); }
-.tile-tone-1 { background: #ffe3e8; }
-.tile-tone-2 { background: #fff0ae; }
-.tile-tone-3 { background: #d9f4e9; }
-.tile-tone-4 { background: #e5e0ff; }
-.tile-locked { color: #6f6b75; filter: saturate(.54); }
-.tile-unlocked { color: var(--ink); }
-.tile-opened:not(.tile-final) { background: #e6f7eb; }
-.tile-topline { display: flex; inline-size: 100%; align-items: center; justify-content: space-between; gap: .15rem; }
-.tile-number { color: #726c78; font-size: .68rem; font-weight: 1000; font-variant-numeric: tabular-nums; }
-.tile-final .tile-number, .tile-final .tile-topline svg { color: #795200; }
-.tile-center { display: flex; min-block-size: 0; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: .14rem; color: inherit; font-size: clamp(.53rem, 2.6vw, .7rem); font-weight: 1000; line-height: 1.05; text-align: center; }
-.tile-center svg { flex: 0 0 auto; }
-.tile-question { display: grid; inline-size: 25px; block-size: 25px; place-items: center; border: 1.5px dashed #8b8790; border-radius: 50%; background: rgb(255 255 255 / 60%); font-size: .92rem; font-weight: 1000; }
-.tile-lock { position: absolute; inset-block-start: 1.95rem; inset-inline-end: .36rem; opacity: .68; }
-.tile-final { border-width: 2px; background: linear-gradient(145deg, #fff1a2, #f7c645 65%, #f3aa37); box-shadow: 3px 4px 0 #78520d; }
-.tile-final.tile-locked { filter: saturate(.78); }
-.tile-final.tile-unlocked { animation: final-glow 1.1s ease-out 1; }
-.tile-final-center { color: #644700; }
-.final-question { display: grid; inline-size: 31px; block-size: 31px; place-items: center; border: 1.5px solid #96670b; border-radius: 50%; background: rgb(255 255 255 / 48%); font-size: 1.15rem; }
-.tile-open-stamp { position: absolute; inset-block-start: 1.55rem; inset-inline-end: .34rem; display: grid; inline-size: 17px; block-size: 17px; place-items: center; border-radius: 50%; background: #51ae7d; color: #fff; font-size: .7rem; font-weight: 1000; }
-.calendar-footnote { margin: .75rem .1rem 0; color: #817b85; font-size: .7rem; line-height: 1.4; text-align: center; }
-.tile-unlock-sparkle { position: absolute; z-index: 4; inset-block-start: 26%; inset-inline-end: 16%; color: #9165e9; font-size: 1.35rem; line-height: 1; pointer-events: none; }
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-auto-rows: 72px;
+  gap: .55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calendar-cell {
+  min-inline-size: 0;
+  min-block-size: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Puerta de adviento: esquinas contenidas, color por Marta siempre visible y número centrado */
+.calendar-tile {
+  --tile-accent: var(--purple);
+  --tile-glow: rgb(190 154 250 / 72%);
+  --tile-number-ink: #fbf6ec;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: .35rem;
+  overflow: clip;
+  border: 2px solid var(--ink);
+  border-radius: 9px;
+  background-color: var(--tile-accent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 42%),
+    inset 0 -4px 0 rgb(0 0 0 / 16%),
+    2px 3px 0 var(--ink);
+  color: var(--tile-number-ink);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    filter 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+.marta-color-coral { --tile-accent: #ff6481; --tile-glow: rgb(255 100 129 / 76%); }
+.marta-color-pink { --tile-accent: #ff9cba; --tile-glow: rgb(255 156 186 / 78%); }
+.marta-color-yellow { --tile-accent: #ffd84b; --tile-glow: rgb(255 216 75 / 82%); }
+.marta-color-orange { --tile-accent: #ff9d52; --tile-glow: rgb(255 157 82 / 78%); }
+.marta-color-blue { --tile-accent: #8acbf4; --tile-glow: rgb(138 203 244 / 78%); }
+.marta-color-purple { --tile-accent: #be9afa; --tile-glow: rgb(190 154 250 / 78%); }
+.marta-color-lilac { --tile-accent: #baa9ff; --tile-glow: rgb(186 169 255 / 78%); }
+.marta-color-final { --tile-accent: #ffd448; --tile-glow: rgb(255 212 72 / 88%); }
+
+/* Reflejo diagonal sutil sobre la puerta */
+.tile-door-sheen {
+  position: absolute;
+  inset: -35% -60%;
+  background: linear-gradient(
+    115deg,
+    transparent 38%,
+    rgb(255 255 255 / 26%) 50%,
+    transparent 62%
+  );
+  transform: translateX(-35%);
+  transition: transform 340ms ease, opacity 240ms ease;
+  pointer-events: none;
+  opacity: .75;
+}
+
+.calendar-tile:not(.tile-opened):hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 55%),
+    inset 0 -4px 0 rgb(0 0 0 / 16%),
+    3px 5px 0 var(--ink);
+}
+
+.calendar-tile:not(.tile-opened):hover .tile-door-sheen {
+  transform: translateX(35%);
+}
+
+/* Cerrada: conserva el color de su Marta pero con tono algo más sobrio/cerrado */
+.calendar-tile.tile-locked:not(.tile-final) {
+  filter: saturate(.82) brightness(.88);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 22%),
+    inset 0 -5px 0 rgb(0 0 0 / 24%),
+    2px 3px 0 var(--ink);
+}
+
+/* Desbloqueada: color vivo con relieve limpio */
+.calendar-tile.tile-unlocked:not(.tile-final) {
+  filter: saturate(1.08) brightness(1.03);
+}
+
+/* Brillo sostenido de la última Marta conseguida (tras su animación y hasta lograr la siguiente) */
+.calendar-tile.is-glowing {
+  border-color: var(--ink);
+  animation: marta-active-glow 2.1s ease-in-out infinite;
+}
+
+.calendar-tile.is-glowing .tile-door-sheen {
+  opacity: 1;
+  animation: marta-sheen-sweep 2.8s ease-in-out infinite;
+}
+
+@keyframes marta-active-glow {
+  0%, 100% {
+    filter: saturate(1.12) brightness(1.04);
+    box-shadow:
+      inset 0 0 0 2px rgb(255 255 255 / 55%),
+      0 0 10px 2px var(--tile-glow),
+      2px 3px 0 var(--ink);
+  }
+  50% {
+    filter: saturate(1.24) brightness(1.13);
+    box-shadow:
+      inset 0 0 0 2px rgb(255 255 255 / 85%),
+      0 0 20px 6px var(--tile-glow),
+      0 0 28px 8px rgb(255 255 255 / 35%),
+      3px 4px 0 var(--ink);
+  }
+}
+
+@keyframes marta-sheen-sweep {
+  0%, 62% { transform: translateX(-45%); }
+  100% { transform: translateX(45%); }
+}
+
+/* Puerta ya abierta: oscura (#151515), borde del color de su Marta y número centrado sobrio */
+.calendar-tile.tile-opened:not(.tile-final) {
+  background: #151515;
+  border-color: var(--tile-accent);
+  border-width: 2.5px;
+  box-shadow: inset 0 0 12px rgb(0 0 0 / 85%), 2px 3px 0 var(--ink);
+  filter: none;
+  cursor: default;
+}
+
+.calendar-tile.tile-opened .tile-door-sheen {
+  display: none;
+}
+
+.calendar-tile.tile-opened .tile-number {
+  color: #fffdf7;
+  opacity: .76;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 65%);
+}
+
+/* Número grande, grueso y centrado en el interior con blanco roto */
+.tile-number {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--tile-number-ink);
+  font-family: "BBH Bogle", "Stack Sans Notch", "Inter", "Arial Black", sans-serif;
+  font-size: clamp(1.4rem, 4.8vw, 2.15rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  text-shadow:
+    0 1px 0 rgb(39 37 45 / 26%),
+    0 2px 4px rgb(39 37 45 / 22%);
+}
+
+/* Casilla 24: marco dorado protagonista */
+.tile-final {
+  border-width: 3px;
+  border-color: #8b5c04;
+  background: linear-gradient(145deg, #fff2a6, #f7c645 62%, #eb9d22);
+  box-shadow:
+    inset 0 0 0 2px rgb(255 255 255 / 45%),
+    0 0 14px rgb(255 204 45 / 48%),
+    3px 4px 0 #78520d;
+}
+
+.tile-final.tile-locked {
+  filter: saturate(.82) brightness(.92);
+}
+
+.tile-final.tile-unlocked:not(.tile-opened) {
+  box-shadow:
+    inset 0 0 0 2px rgb(255 255 255 / 65%),
+    0 0 20px 4px rgb(255 212 59 / 72%),
+    3px 4px 0 #78520d;
+}
+
+.tile-final.is-glowing {
+  animation: final-active-glow 2s ease-in-out infinite;
+}
+
+@keyframes final-active-glow {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 2px rgb(255 255 255 / 60%),
+      0 0 16px 4px rgb(255 212 59 / 65%),
+      3px 4px 0 #78520d;
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 2px rgb(255 255 255 / 90%),
+      0 0 28px 9px rgb(255 200 35 / 88%),
+      4px 5px 0 #78520d;
+  }
+}
+
+.tile-final.tile-opened {
+  background: #151515;
+  border-color: #f3c13a;
+  box-shadow: inset 0 0 14px rgb(0 0 0 / 88%), 3px 4px 0 #78520d;
+  filter: none;
+}
+
+.tile-final:not(.tile-opened) .tile-number {
+  color: #fffaf0;
+  text-shadow:
+    0 1px 0 rgb(120 82 13 / 42%),
+    0 2px 5px rgb(120 82 13 / 36%);
+}
+
+.tile-unlock-sparkle {
+  position: absolute;
+  z-index: 3;
+  inset-block-start: 14%;
+  inset-inline-end: 16%;
+  color: #fffdf5;
+  text-shadow: 0 0 8px var(--tile-glow), 0 1px 2px var(--ink);
+  font-size: 1.15rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.calendar-footnote {
+  margin: .75rem .1rem 0;
+  color: #817b85;
+  font-size: .7rem;
+  line-height: 1.4;
+  text-align: center;
+}
 
 .board-footer { padding-block: .15rem .7rem; color: #8d8592; text-align: center; }
 .board-footer p { margin: .18rem 0; font-size: .68rem; }
@@ -304,6 +532,7 @@ dialog.dialog-frame:modal { overscroll-behavior: contain; }
 .challenge-form { display: grid; gap: .65rem; }
 .challenge-prompt { margin: 0; color: #37343d; font-size: 1.03rem; font-weight: 900; line-height: 1.35; }
 .challenge-hint { margin: -.2rem 0 0; color: #817b85; font-size: .78rem; line-height: 1.4; }
+
 /* Artist Marta: marco artístico ceñido exactamente al tamaño de cada obra. */
 .artwork-stage {
   position: relative;
@@ -363,6 +592,7 @@ dialog.dialog-frame:modal { overscroll-behavior: contain; }
     max-block-size: min(48dvh, 390px);
   }
 }
+
 .answer-options { display: grid; gap: .48rem; margin-block-start: .1rem; }
 .answer-option { display: flex; min-block-size: 48px; align-items: center; justify-content: space-between; gap: .6rem; padding: .72rem .85rem; border: 1.5px solid #4b4751; border-radius: 14px; background: #fff; color: var(--ink); font-size: .9rem; font-weight: 800; text-align: start; cursor: pointer; transition: background-color 140ms ease, transform 140ms ease; }
 .answer-option:hover { background: #f7f3ff; transform: translateX(2px); }
@@ -474,8 +704,14 @@ dialog.dialog-frame:modal { overscroll-behavior: contain; }
   .board-intro { padding: 1.15rem 1.35rem; }
   .badge-item { flex-basis: 92px; }
   .calendar-section { padding: 1.25rem 1.2rem; }
-  .calendar-grid { gap: .72rem; }
-  .calendar-tile { min-block-size: 108px; padding: .6rem .55rem .65rem; border-radius: 17px; }
+  .calendar-grid {
+    gap: .72rem;
+    grid-auto-rows: 90px;
+  }
+  .calendar-tile {
+    padding: .45rem;
+    border-radius: 10px;
+  }
   .calendar-key { font-size: .65rem; }
   dialog.dialog-frame { padding: 1.5rem 1.45rem 1.35rem; }
 }
@@ -487,9 +723,10 @@ dialog.dialog-frame:modal { overscroll-behavior: contain; }
   .board-main { padding-inline: .72rem; }
   .calendar-section { padding-inline: .63rem; }
   .calendar-grid { gap: .4rem; }
-  .calendar-tile { min-block-size: 78px; padding: .35rem .28rem .4rem; border-radius: 13px; }
-  .tile-center { font-size: .54rem; }
-  .tile-lock { inset-block-start: 1.8rem; inset-inline-end: .25rem; }
+  .calendar-tile {
+    padding: .28rem;
+    border-radius: 8px;
+  }
   .motion-control-row p { max-inline-size: 17ch; }
   .progress-character-slot, .progress-character-reveal, .progress-character-video { inline-size: 52px; block-size: 52px; }
 }
@@ -500,10 +737,15 @@ dialog.dialog-frame:modal { overscroll-behavior: contain; }
   }
   .marta-progress-track::-webkit-progress-value { transition-duration: 0.01ms; }
   .marta-progress-track::-moz-progress-bar { transition-duration: 0.01ms; }
-  .button:not(:disabled):hover, .button:not(:disabled):active, .calendar-tile:not(.tile-locked):hover, .motion-toggle:hover, .answer-option:hover, .order-option:hover {
+  .button:not(:disabled):hover, .button:not(:disabled):active, .calendar-tile:not(.tile-opened):hover, .motion-toggle:hover, .answer-option:hover, .order-option:hover {
     transform: none;
   }
-  .tile-final.tile-unlocked { animation: none; }
+  .calendar-tile.is-glowing,
+  .calendar-tile.is-glowing .tile-door-sheen,
+  .tile-final.tile-unlocked,
+  .tile-final.is-glowing {
+    animation: none;
+  }
 }
 
 @media (forced-colors: active) {
