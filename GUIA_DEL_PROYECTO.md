@@ -264,3 +264,178 @@ Si TypeScript señala un error después de editar, empieza por leer el nombre de
 | Vídeo, póster o fuente compatible | archivo fuente en la raíz, `scripts/convert-videos.ps1`, salida en `public/videos/` y `src/components/CharacterVideo.tsx` |
 | Entrada del sitio, título de pestaña o metadatos | `index.html` |
 
+
+
+export type SoundName =
+  | 'pop'
+  | 'open'
+  | 'catch_good'
+  | 'catch_bad'
+  | 'level_up'
+  | 'fail_level'
+  | 'victory_game'
+  | 'final_victory';
+
+const HAPTIC_PATTERNS: Record<SoundName, number | number[]> = {
+  pop: 15,
+  open: [20, 30, 20],
+  catch_good: 30,
+  catch_bad: [40, 40, 40],
+  level_up: [30, 50, 30],
+  fail_level: [80, 50, 80],
+  victory_game: [50, 80, 50, 80],
+  final_victory: [100, 100, 100, 200],
+};
+
+const audioCache: Partial<Record<SoundName, HTMLAudioElement>> = {};
+
+function getAudio(sound: SoundName): HTMLAudioElement {
+  if (!audioCache[sound]) {
+    const audio = new Audio(`/audio/${sound}.mp3`);
+    audio.preload = 'auto';
+    audioCache[sound] = audio;
+  }
+  return audioCache[sound]!;
+}
+
+export function playSoundAndVibrate(sound: SoundName): void {
+  try {
+    const baseAudio = getAudio(sound);
+    const instance = baseAudio.cloneNode(true) as HTMLAudioElement;
+    instance.volume = 0.65;
+    void instance.play().catch(() => {});
+  } catch {}
+
+  if (typeof window !== 'undefined' && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      navigator.vibrate(HAPTIC_PATTERNS[sound]);
+    } catch {}
+  }
+}
+```[cite: 2]
+
+---
+
+### Paso 2: Añadir el sonido `pop` en los botones generales
+
+Ahora vamos a darle vida a la interfaz general. Cada vez que Marta pulse un botón (como avanzar pantallas, abrir menús o tocar elementos generales), queremos que suene un pequeño chasquido y vibre sutilmente[cite: 2].
+
+Para hacerlo, ve a tus componentes donde tengas botones principales (por ejemplo, en **`src/App.tsx`** o en tus pantallas de bienvenida/reglas)[cite: 2]. Importa la función arriba del todo:
+
+```tsx
+import { playSoundAndVibrate } from './utils/soundHelper';
+```[cite: 2]
+
+Y luego, dentro del evento `onClick` de tus botones, simplemente añade la llamada antes de realizar la acción del botón[cite: 2]:
+
+```tsx
+<button
+  onClick={() => {
+    // Reproduce el sonido pop y la vibración de 15ms
+    playSoundAndVibrate('pop');
+    
+    // Aquí pones el resto de tu lógica (ej: cambiar de pantalla)
+  }}
+>
+  Siguiente
+</button>
+```[cite: 2]
+
+---
+
+### Paso 3: Configurar la apertura secuencial de casillas con el sonido `open`
+
+En el archivo **`src/components/CalendarBoard.tsx`** es donde se gestionan las casillas del calendario de adviento[cite: 2]. Cuando se desbloquea una Marta, se abren varias casillas de golpe. 
+
+Para que no aparezcan todas de golpe de forma brusca, vamos a usar un bucle con un temporizador escalonado (`setTimeout`) de unos `380` milisegundos entre casilla y casilla[cite: 2]. Esto hace que se vayan desplegando **de una en una**, reproduciendo el sonido `open` y su vibración individual por cada una[cite: 2].
+
+Busca la zona donde se revelan las casillas en `CalendarBoard.tsx` eインtegra una lógica parecida a esta[cite: 2]:
+
+```tsx
+import { useEffect } from 'react';
+import { playSoundAndVibrate } from '../utils/soundHelper';
+
+// Dentro del useEffect o función que maneja la revelación de casillas de una Marta:
+useEffect(() => {
+  if (!revealMartaId) return;
+
+  const giftNumbers = [/* números de casilla de esta Marta */];
+  const timers: number[] = [];
+
+  giftNumbers.forEach((giftNum, index) => {
+    const timerId = window.setTimeout(() => {
+      // 1. Aquí actualizas la casilla visualmente para abrirla
+      
+      // 2. Suena 'open' y vibra de forma independiente por esta casilla
+      playSoundAndVibrate('open');
+    }, index * 380); // 380ms de retraso escalonado entre una y otra
+
+    timers.push(timerId);
+  });
+
+  return () => {
+    timers.forEach((id) => clearTimeout(id));
+  };
+}, [revealMartaId]);
+```[cite: 2]
+
+---
+
+### Paso 4: Conectar los sonidos en el minijuego de Beauty Marta (`src/components/BeautyArcade.tsx`)
+
+Como ya tienes tu archivo del minijuego arcade creado (`BeautyArcade.tsx`), ábrelo y añade las llamadas en los eventos clave del juego[cite: 2]:
+
+1. **Cuando el tocador atrapa un cosmético bueno (`catch_good`):** Colócalo justo dentro de la condición de colisión cuando el objeto sea válido[cite: 2].
+   ```tsx
+   playSoundAndVibrate('catch_good');
+   ```[cite: 2]
+
+2. **Cuando atrapa una trampa (caca, cebolla o araña) pero aún le quedan vidas (`catch_bad`):** Ponlo cuando el usuario sufra un fallo menor[cite: 2].
+   ```tsx
+   playSoundAndVibrate('catch_bad');
+   ```[cite: 2]
+
+3. **Cuando pierde todas las vidas y se reinicia el nivel (`fail_level`):** Colócalo en el bloque de código que resetea las vidas al llegar a cero[cite: 2].
+   ```tsx
+   playSoundAndVibrate('fail_level');
+   ```[cite: 2]
+
+4. **Cuando supera un nivel y pasa al siguiente (`level_up`):** Ponlo al completar el objetivo de cosméticos del nivel[cite: 2].
+   ```tsx
+   playSoundAndVibrate('level_up');
+   ```[cite: 2]
+
+5. **Cuando completa los 3 niveles del minijuego entero (`victory_game`):** Colócalo justo antes de abrir la ventana modal de victoria de Beauty Marta[cite: 2].
+   ```tsx
+   playSoundAndVibrate('victory_game');
+   ```[cite: 2]
+
+---
+
+### Paso 5: Añadir el sonido `final_victory` en la Caja Final 24 (`src/components/CelebrationDialogs.tsx`)
+
+Por último, para cuando Marta complete todas las personalidades y abra la caja número 24, ve al archivo **`src/components/CelebrationDialogs.tsx`** (en el componente encargado de la caja final)[cite: 2]. 
+
+Añade el import arriba[cite: 2]:
+```tsx
+import { useEffect } from 'react';
+import { playSoundAndVibrate } from '../utils/soundHelper';
+```[cite: 2]
+
+Y dentro del componente de la caja final, haz que se ejecute al montarse el diálogo[cite: 2]:
+```tsx
+export const FinalDialog = () => {
+  useEffect(() => {
+    // Se dispara el sonido épico y la vibración de victoria final
+    playSoundAndVibrate('final_victory');
+  }, []);
+
+  return (
+    <div>
+      {/* Tu estructura visual de la caja 24 */}
+    </div>
+  );
+};
+```[cite: 2]
+
+¡Y listo! Con esto ya tienes cada sonido y vibración asignados exactamente a su archivo correspondiente, explicado paso a paso en el chat.

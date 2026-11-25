@@ -14,8 +14,6 @@ export const appCopy = {
   finalMessage: 'Siete Martas, veintitrés regalos y una aventura hecha con muchísimo cariño. ¡Feliz cumpleaños!',
 };
 
-// Reparto temporal de ejemplo: cinco Martas con 3 regalos y dos con 4.
-// Los números 1–23 aparecen exactamente una vez. El 24 queda reservado para el gran final.
 export const giftNumbersByMarta: Record<MartaId, number[]> = {
   little: [1, 8, 15],
   lovely: [2, 9, 16],
@@ -40,12 +38,10 @@ export const martas: MartaDefinition[] = [
     color: 'coral',
     description: 'Curiosa, traviesa y siempre lista para encontrar un tesoro escondido entre sus juguetes.',
     giftNumbers: giftNumbersByMarta.little,
-    gameTitle: 'El Tesoro Escondido en la Caja de Juguetes',
-    gameIntro: 'Sigue las pistas y elige la caja correcta en tres rondas.',
+    gameTitle: 'Memorama de Juguetes',
+    gameIntro: 'Encuentra las 6 parejas de manera consecutiva sin equivocarte. Si fallas, se ocultan y vuelves a empezar.',
     levels: [
-      { kind: 'choice', label: 'Pista 1', prompt: 'Aquí se esconden las piezas que hacen clic al encajar.', options: ['Caja de bloques', 'Cesta de peluches', 'Caja de disfraces'], answer: 'Caja de bloques' },
-      { kind: 'choice', label: 'Pista 2', prompt: 'El premio busca algo suave para abrazar durante la siesta.', options: ['Caja de bloques', 'Cesta de peluches', 'Caja de pinturas'], answer: 'Cesta de peluches' },
-      { kind: 'choice', label: 'Pista 3', prompt: 'Aquí puede convertirse en astronauta, princesa o superheroína.', options: ['Cesta de peluches', 'Caja de disfraces', 'Caja de bloques'], answer: 'Caja de disfraces' },
+      { label: 'Memorama · 6 parejas' },
     ],
   },
   {
@@ -72,12 +68,46 @@ export const martas: MartaDefinition[] = [
     color: 'yellow',
     description: 'Imaginativa y llena de color: siempre encuentra una forma bonita de crear algo único.',
     giftNumbers: giftNumbersByMarta.artist,
-    gameTitle: 'Mezcla de Colores',
-    gameIntro: 'Combina mentalmente los colores y encuentra el tono que aparece.',
+    gameTitle: 'Obra Distorsionada',
+    gameIntro: 'Reconoce cada cuadro pese al pixelado, el desenfoque y el cambio de color.',
     levels: [
-      { kind: 'choice', label: 'Mezcla 1', prompt: 'Pintura roja + pintura amarilla = …', options: ['Verde', 'Naranja', 'Violeta'], answer: 'Naranja' },
-      { kind: 'choice', label: 'Mezcla 2', prompt: 'Lana azul + lana amarilla = …', options: ['Verde', 'Rosa', 'Naranja'], answer: 'Verde' },
-      { kind: 'choice', label: 'Mezcla 3', prompt: 'Un poco de rojo con azul crea un tono …', options: ['Turquesa', 'Violeta', 'Lima'], answer: 'Violeta' },
+      {
+        kind: 'artwork',
+        label: 'Obra 1',
+        // Ajusta el nombre exacto del archivo en public/pictures si es necesario
+        imageSrc: '/pictures/girasoles.jpg',
+        options: [
+          'Campo de trigo con cipreses de Van Gogh',
+          'Los girasoles de Van Gogh',
+          'La terraza de café por la noche de Van Gogh',
+        ],
+        answer: 'Los girasoles de Van Gogh',
+        effects: { pixelSize: 12, blurPx: 2, hueDeg: 85, saturate: 1.25 },
+      },
+      {
+        kind: 'artwork',
+        label: 'Obra 2',
+        imageSrc: '/pictures/puente-japones.jpg',
+        options: [
+          'El puente japonés de Monet',
+          'Estanque de nenúfares de Monet',
+          'Paseo junto al acantilado de Monet',
+        ],
+        answer: 'El puente japonés de Monet',
+        effects: { pixelSize: 14, blurPx: 2.5, hueDeg: 130, saturate: 1.3 },
+      },
+      {
+        kind: 'artwork',
+        label: 'Obra 3',
+        imageSrc: '/pictures/jardin-delicias.jpg',
+        options: [
+          'El carro de heno de El Bosco',
+          'El jardín de las delicias del Bosco',
+          'El triunfo de la muerte de Bruegel',
+        ],
+        answer: 'El jardín de las delicias del Bosco',
+        effects: { pixelSize: 15, blurPx: 2, hueDeg: -75, saturate: 1.2 },
+      },
     ],
   },
   {

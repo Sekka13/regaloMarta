@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from 'react';
-import { Check, RotateCcw } from 'lucide-react';
-import type { GameLevel } from '../types/game';
-import { playSoundAndVibrate } from '../utils/soundHelper'; // 👈 1. Importamos el helper de sonido
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { ArrowRight, Check, RotateCcw } from 'lucide-react';
+import type { ArtworkLevel, GameLevel } from '../types/game';
+import { playSoundAndVibrate } from '../utils/soundHelper';
 
 type LevelChallengeProps = {
   level: GameLevel;
@@ -17,28 +17,113 @@ function normalizeAnswer(value: string) {
     .toLocaleLowerCase('es');
 }
 
+function ArtworkCanvas({ level, revealed }: { level: ArtworkLevel; revealed: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  const pixelSize = level.effects?.pixelSize ?? 8;
+  const blurPx = level.effects?.blurPx ?? 1;
+  const hueDeg = level.effects?.hueDeg ?? 45;
+  const saturate = level.effects?.saturate ?? 1.1;
+
+  useEffect(() => {
+    if (revealed) return;
+    let cancelled = false;
+    const img = new Image();
+    img.src = level.imageSrc;
+
+    img.onload = () => {
+      if (cancelled || !canvasRef.current) return;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const block = Math.max(2, pixelSize);
+      const baseWidth = 720;
+      const ratio =
+        img.naturalHeight && img.naturalWidth
+          ? img.naturalHeight / img.naturalWidth
+          : 0.75;
+      const targetW = Math.max(40, Math.round(baseWidth / block));
+      const targetH = Math.max(40, Math.round(targetW * ratio));
+
+      canvas.width = targetW;
+      canvas.height = targetH;
+      ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, targetW, targetH);
+      ctx.drawImage(img, 0, 0, targetW, targetH);
+    };
+
+    return () => {
+      cancelled = true;
+    };
+  }, [level.imageSrc, pixelSize, revealed]);
+
+  if (revealed) {
+    return (
+      <div className="artwork-stage is-revealed">
+        <div className="artwork-mat">
+          <img
+            src={level.imageSrc}
+            alt={level.answer}
+            className="artwork-media is-revealed"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="artwork-stage">
+      <div className="artwork-mat">
+        <canvas
+          ref={canvasRef}
+          aria-label="Cuadro con efectos visuales"
+          className="artwork-media is-pixelated"
+          style={{
+            filter: `blur(${blurPx}px) hue-rotate(${hueDeg}deg) saturate(${saturate})`,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function LevelChallenge({ level, onSolved, isLastLevel }: LevelChallengeProps) {
   const [selected, setSelected] = useState('');
   const [answer, setAnswer] = useState('');
   const [orderedItems, setOrderedItems] = useState<string[]>([]);
   const [notice, setNotice] = useState('');
+  const [artworkRevealed, setArtworkRevealed] = useState(false);
 
-  // 🎯 2. Función centralizada para manejar el resultado del nivel
   const handleCheckResult = (isCorrect: boolean, errorMessage: string) => {
     if (isCorrect) {
-      if(!isLastLevel){
-        playSoundAndVibrate('level_up'); // 🌟 Sonido de acierto
-      } 
-      onSolved();                     // Avanza de nivel
+      if (!isLastLevel) {
+        playSoundAndVibrate('level_up');
+      }
+      onSolved();
     } else {
-      playSoundAndVibrate('fail_level'); // ❌ Sonido de fallo
-      setNotice(errorMessage);           // Muestra el mensaje de error correspondiente
+      playSoundAndVibrate('fail_level');
+      setNotice(errorMessage);
     }
   };
 
-  // 🎯 3. Función unificada handleSubmit que sustituye a los 3 submits antiguos
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (level.kind === 'artwork') {
+      if (artworkRevealed) {
+        handleCheckResult(true, '');
+        return;
+      }
+      if (selected === level.answer) {
+        playSoundAndVibrate('level_up');
+        setArtworkRevealed(true);
+        setNotice('¡Correcto! Mira el cuadro original sin efectos.');
+      } else {
+        handleCheckResult(false, 'No es ese cuadro. ¡Fíjate bien en las formas y los colores!');
+      }
+      return;
+    }
 
     let isCorrect = false;
     let errorMessage = '';
@@ -46,12 +131,10 @@ export function LevelChallenge({ level, onSolved, isLastLevel }: LevelChallengeP
     if (level.kind === 'choice') {
       isCorrect = selected === level.answer;
       errorMessage = '¡Casi! Prueba otra respuesta.';
-    } 
-    else if (level.kind === 'word') {
+    } else if (level.kind === 'word') {
       isCorrect = normalizeAnswer(answer) === normalizeAnswer(level.answer);
       errorMessage = 'Esa no era. ¡Inténtalo otra vez!';
-    } 
-    else if (level.kind === 'order') {
+    } else if (level.kind === 'order') {
       isCorrect = orderedItems.every((item, index) => item === level.correctOrder[index])
         && orderedItems.length === level.correctOrder.length;
       errorMessage = 'El orden no está del todo bien. Puedes quitar el último paso y probar de nuevo.';
@@ -71,6 +154,52 @@ export function LevelChallenge({ level, onSolved, isLastLevel }: LevelChallengeP
     setOrderedItems([]);
     setNotice('');
   };
+
+  if (level.kind === 'artwork') {
+    return (
+      <form className="challenge-form" onSubmit={handleSubmit}>
+        <p className="challenge-prompt">¿Qué cuadro se esconde detrás de los efectos?</p>
+        <ArtworkCanvas level={level} revealed={artworkRevealed} />
+
+        <div className="answer-options">
+          {level.options.map((option, index) => (
+            <button
+              className={`answer-option ${selected === option ? 'is-selected' : ''}`}
+              type="button"
+              aria-pressed={selected === option}
+              autoFocus={index === 0}
+              disabled={artworkRevealed}
+              key={option}
+              onClick={() => {
+                setSelected(option);
+                setNotice('');
+              }}
+            >
+              <span>{option}</span>
+              {selected === option && <Check size={18} aria-hidden="true" />}
+            </button>
+          ))}
+        </div>
+
+        <p className="challenge-feedback" role="status" aria-live="polite">{notice}</p>
+
+        {artworkRevealed ? (
+          <button className="button button-primary challenge-submit" type="submit" data-sound="none">
+            Siguiente <ArrowRight size={18} aria-hidden="true" />
+          </button>
+        ) : (
+          <button
+            className="button button-primary challenge-submit"
+            type="submit"
+            disabled={!selected}
+            data-sound="none"
+          >
+            Comprobar respuesta <Check size={18} aria-hidden="true" />
+          </button>
+        )}
+      </form>
+    );
+  }
 
   if (level.kind === 'choice') {
     return (
@@ -93,7 +222,6 @@ export function LevelChallenge({ level, onSolved, isLastLevel }: LevelChallengeP
           ))}
         </div>
         <p className="challenge-feedback" role="status" aria-live="polite">{notice}</p>
-        {/* 👈 4. Añadimos data-sound="none" aquí para apagar el pop global */}
         <button className="button button-primary challenge-submit" type="submit" disabled={!selected} data-sound="none">
           Comporbar respuesta <Check size={18} aria-hidden="true" />
         </button>
@@ -120,7 +248,6 @@ export function LevelChallenge({ level, onSolved, isLastLevel }: LevelChallengeP
           required
         />
         <p className="challenge-feedback" role="status" aria-live="polite">{notice}</p>
-        {/* 👈 4. Añadimos data-sound="none" aquí también */}
         <button className="button button-primary challenge-submit" type="submit" disabled={!answer.trim()} data-sound="none">
           Probar palabra <Check size={18} aria-hidden="true" />
         </button>
@@ -161,7 +288,6 @@ export function LevelChallenge({ level, onSolved, isLastLevel }: LevelChallengeP
         <button className="button button-secondary" type="button" onClick={resetOrder} disabled={orderedItems.length === 0}>
           <RotateCcw size={16} aria-hidden="true" /> Reiniciar
         </button>
-        {/* 👈 4. Añadimos data-sound="none" en el botón de comprobar orden */}
         <button className="button button-primary challenge-submit" type="submit" disabled={orderedItems.length !== level.correctOrder.length} data-sound="none">
           Comprobar orden <Check size={18} aria-hidden="true" />
         </button>

@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { CharacterVideo } from './CharacterVideo';
 import { BeautyArcade } from './BeautyArcade';
+import { MemoryGame } from './MemoryGame'; 
 import { DialogFrame } from './DialogFrame';
 import { LevelChallenge } from './LevelChallenge';
 import { playSoundAndVibrate } from '../utils/soundHelper';
@@ -79,22 +80,26 @@ export function GameDialog({ marta, completedLevels, celebrateUnlock, videosPaus
               <p className="eyebrow">{marta.emoji} Minijuego de {marta.name}</p>
               <h2 id={titleId}>{marta.gameTitle}</h2>
               <p className="game-intro">{marta.gameIntro}</p>
-              <div className="level-meter">
-                <div className="level-meter-copy">
-                  <span>{marta.levels[completedLevels]?.label ?? 'Pruebas'}</span>
-                  <span>Prueba {completedLevels + 1} de {marta.levels.length}</span>
+              
+              {/* Ocultamos el medidor tradicional si estamos en el memory game o beauty */}
+              {marta.id !== 'little' && marta.id !== 'beauty' && (
+                <div className="level-meter">
+                  <div className="level-meter-copy">
+                    <span>{marta.levels[completedLevels]?.label ?? 'Pruebas'}</span>
+                    <span>Prueba {completedLevels + 1} de {marta.levels.length}</span>
+                  </div>
+                  <div
+                    className="level-meter-track"
+                    role="progressbar"
+                    aria-label={`Progreso de ${marta.name}`}
+                    aria-valuemin={0}
+                    aria-valuemax={marta.levels.length}
+                    aria-valuenow={completedLevels}
+                  >
+                    <span style={{ width: `${(completedLevels / marta.levels.length) * 100}%` }} />
+                  </div>
                 </div>
-                <div
-                  className="level-meter-track"
-                  role="progressbar"
-                  aria-label={`Progreso de ${marta.name}`}
-                  aria-valuemin={0}
-                  aria-valuemax={marta.levels.length}
-                  aria-valuenow={completedLevels}
-                >
-                  <span style={{ width: `${(completedLevels / marta.levels.length) * 100}%` }} />
-                </div>
-              </div>
+              )}
               
               {marta.id === 'beauty' ? (
                 <BeautyArcade
@@ -103,6 +108,13 @@ export function GameDialog({ marta, completedLevels, celebrateUnlock, videosPaus
                   completedLevels={completedLevels}
                   onLevelComplete={onSolved}
                   isLastLevel={isLastLevel}
+                />
+              ) : marta.id === 'little' ? (
+                <MemoryGame
+                  key="memory-game-little"
+                  onGameComplete={() => {
+                    onSolved();
+                  }}
                 />
               ) : (
                 <LevelChallenge

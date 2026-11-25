@@ -33,13 +33,33 @@ export type OrderLevel = {
   correctOrder: string[];
 };
 
-export type GameLevel = ChoiceLevel | WordLevel | OrderLevel;
+export type ArtworkEffects = {
+  pixelSize?: number; // Tamaño de bloque de pixelado (ej. 10 - 18)
+  blurPx?: number;    // Desenfoque en píxeles (ej. 2 - 5)
+  hueDeg?: number;    // Rotación de color en grados (ej. 65 - 160)
+  saturate?: number;  // Saturación opcional (ej. 1.3)
+};
+
+export type ArtworkLevel = {
+  kind: 'artwork';
+  label: string;
+  imageSrc: string;
+  options: string[];
+  answer: string;
+  effects?: ArtworkEffects;
+};
+
+export type GameLevel = ChoiceLevel | WordLevel | OrderLevel | ArtworkLevel;
 
 export type BeautyArcadeLevel = {
   label: string;
   catchTarget: 5;
   fallSpeedPxPerSecond: number;
   spawnIntervalMs: number;
+};
+
+export type MemoryGameLevel = {
+  label: string;
 };
 
 type MartaDefinitionBase = {
@@ -54,8 +74,9 @@ type MartaDefinitionBase = {
 };
 
 export type MartaDefinition = MartaDefinitionBase & (
-  | { id: Exclude<MartaId, 'beauty'>; levels: GameLevel[] }
+  | { id: Exclude<MartaId, 'beauty' | 'little'>; levels: GameLevel[] }
   | { id: 'beauty'; levels: BeautyArcadeLevel[] }
+  | { id: 'little'; levels: MemoryGameLevel[] }
 );
 
 export type PersistedProgress = {
