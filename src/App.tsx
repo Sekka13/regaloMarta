@@ -6,6 +6,7 @@ import { useGameProgress } from './hooks/useGameProgress';
 import { CalendarBoard } from './components/CalendarBoard';
 import { MartaBadgeRail } from './components/MartaBadgeRail';
 import { GameDialog } from './components/GameDialog';
+import yoPic from '../public/pictures/yoPic.webp'
 import { FinalDialog, GiftDialog } from './components/CelebrationDialogs';
 import { playSoundAndVibrate } from './utils/soundHelper';
 import type { MartaId } from './types/game';
@@ -36,7 +37,7 @@ function WelcomeScreen({ onContinue }: { onContinue: () => void }) {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: reduceMotion ? 0 : 0.45, type: 'spring', bounce: 0.23 }}
       >
-        <div className="welcome-sticker sticker-holly" aria-hidden="true">🎄</div>
+        <div className="welcome-sticker sticker-holly" aria-hidden="true">❤️</div>
         <div className="welcome-sticker sticker-sparkle" aria-hidden="true">✨</div>
         <div className="hero-art" aria-hidden="true">
           <span className="hero-orbit hero-orbit-one" />
@@ -45,9 +46,13 @@ function WelcomeScreen({ onContinue }: { onContinue: () => void }) {
           <span className="hero-gift hero-gift-two">🎀</span>
           <span className="hero-star hero-star-one">✦</span>
           <span className="hero-star hero-star-two">✧</span>
-          <span className="hero-center-emoji">🎄</span>
+          <span className="hero-center-emoji">                    <img
+                      src={yoPic}
+                      alt=""
+                    
+                    /></span>
         </div>
-        <p className="eyebrow welcome-eyebrow">Un regalo muy especial</p>
+        <p className="eyebrow welcome-eyebrow">Reina de la tocinería...</p>
         <h1>{appCopy.title}</h1>
         <p className="welcome-subtitle">{appCopy.subtitle}</p>
         <button className="button button-primary welcome-continue" type="button" onClick={onContinue}>
@@ -204,7 +209,7 @@ export default function App() {
 
   const selectCalendarCell = (number: number) => {
     if (number === 24) {
-      setToastMessage('¡El gran final te espera! Completa las siete Martas para abrir la casilla 24.');
+      setToastMessage('Completa las siete Martas para abrir la casilla 24.');
       return;
     }
 
@@ -223,7 +228,7 @@ export default function App() {
     <div className="app-shell">
       <FloatingDecorations />
       <header className="board-header">
-        <div className="brand-mark" aria-hidden="true"><span>🎄</span></div>
+        <div className="brand-mark" aria-hidden="true"><span>YO</span></div>
         <div className="board-heading">
           <p className="eyebrow">Tu aventura de cumpleaños</p>
           <h1>Martalendario <span>de Adviento</span></h1>
@@ -239,7 +244,7 @@ export default function App() {
           <div>
             <p className="eyebrow">¡Hola, cumpleañera!</p>
             <h2>Elige una casilla</h2>
-            <p>Juega al minijuego que esconde y descubre qué regalo abre.</p>
+            <p>Juega al minijuego y descubre qué Marta desbloquea para abrir sus regalos.</p>
           </div>
           <div className="board-intro-sticker" aria-hidden="true">💌</div>
         </section>

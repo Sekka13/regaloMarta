@@ -88,18 +88,50 @@ function ArtworkCanvas({ level, revealed }: { level: ArtworkLevel; revealed: boo
   );
 }
 
-export function LevelChallenge({ level, onSolved, isLastLevel }: LevelChallengeProps) {
+export function LevelChallenge({ level, onSolved }: LevelChallengeProps) {
   const [selected, setSelected] = useState('');
   const [answer, setAnswer] = useState('');
   const [orderedItems, setOrderedItems] = useState<string[]>([]);
   const [notice, setNotice] = useState('');
   const [artworkRevealed, setArtworkRevealed] = useState(false);
+  const [songRevealed, setSongRevealed] = useState(false);
+  const songAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const stopSongAudio = () => {
+    const audio = songAudioRef.current;
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+    audio.onended = null;
+    songAudioRef.current = null;
+  };
+
+  useEffect(() => {
+    return () => {
+      stopSongAudio();
+    };
+  }, []);
+
+  const playSongClipOnce = (songSrc?: string) => {
+    stopSongAudio();
+    if (!songSrc || typeof window === 'undefined') return;
+    try {
+      const audio = new Audio(songSrc);
+      audio.loop = false;
+      audio.volume = 0.75;
+      audio.onended = () => {
+        if (songAudioRef.current === audio) {
+          songAudioRef.current = null;
+        }
+      };
+      songAudioRef.current = audio;
+      void audio.play().catch(() => {});
+    } catch {}
+  };
 
   const handleCheckResult = (isCorrect: boolean, errorMessage: string) => {
     if (isCorrect) {
-      if (!isLastLevel) {
-        playSoundAndVibrate('level_up');
-      }
+      playSoundAndVibrate('level_up');
       onSolved();
     } else {
       playSoundAndVibrate('fail_level');
@@ -112,7 +144,7 @@ export function LevelChallenge({ level, onSolved, isLastLevel }: LevelChallengeP
 
     if (level.kind === 'artwork') {
       if (artworkRevealed) {
-        handleCheckResult(true, '');
+        onSolved();
         return;
       }
       if (selected === level.answer) {
@@ -125,13 +157,38 @@ export function LevelChallenge({ level, onSolved, isLastLevel }: LevelChallengeP
       return;
     }
 
+    if (level.kind === 'choice') {
+      if (songRevealed) {
+        stopSongAudio();
+        onSolved();
+        return;
+      }
+
+      const isCorrectChoice = level.acceptAllOptions
+        ? level.options.includes(selected)
+        : selected === level.answer;
+
+      if (!isCorrectChoice) {
+        handleCheckResult(false, '¡Casi! Prueba otra respuesta.');
+        return;
+      }
+
+      if (level.songSrc) {
+        playSoundAndVibrate('level_up');
+        setSongRevealed(true);
+        setNotice('¡Temazo! Escuchando el fragmento…');
+        playSongClipOnce(level.songSrc);
+        return;
+      }
+
+      handleCheckResult(true, '');
+      return;
+    }
+
     let isCorrect = false;
     let errorMessage = '';
 
-    if (level.kind === 'choice') {
-      isCorrect = selected === level.answer;
-      errorMessage = '¡Casi! Prueba otra respuesta.';
-    } else if (level.kind === 'word') {
+    if (level.kind === 'word') {
       isCorrect = normalizeAnswer(answer) === normalizeAnswer(level.answer);
       errorMessage = 'Esa no era. ¡Inténtalo otra vez!';
     } else if (level.kind === 'order') {
@@ -184,7 +241,55 @@ export function LevelChallenge({ level, onSolved, isLastLevel }: LevelChallengeP
         <p className="challenge-feedback" role="status" aria-live="polite">{notice}</p>
 
         {artworkRevealed ? (
-          <button className="button button-primary challenge-submit" type="submit" data-sound="none">
+          <button className="button button-primary challenge-submit" type="submit">
+            Siguiente <ArrowRight size={18} aria-hidden="true" />
+          </button>
+        ) : (
+          <button
+            className="button button-primary challenge-submit"
+            type="submit"
+            disabled={!selected}
+          >
+            Comprobar respuesta <Check size={18} aria-hidden="true" />
+          </button>
+        )}
+      </form>
+    );
+  }
+
+  if (level.kind === 'choice') {
+    const isSongAnswerRevealed = Boolean(songRevealed && level.songSrc);
+    return (
+      <form className="challenge-form" onSubmit={handleSubmit}>
+        <p className="challenge-prompt">
+          {isSongAnswerRevealed ? level.label : level.prompt}
+        </p>
+        {!isSongAnswerRevealed && level.hint && <p className="challenge-hint">{level.hint}</p>}
+
+        <div className="answer-options">
+          {level.options.map((option, index) => {
+            const isMarked = selected === option;
+            return (
+              <button
+                className={`answer-option ${isMarked ? 'is-selected' : ''}`}
+                type="button"
+                aria-pressed={isMarked}
+                autoFocus={index === 0}
+                disabled={isSongAnswerRevealed}
+                key={option}
+                onClick={() => { setSelected(option); setNotice(''); }}
+              >
+                <span>{option}</span>
+                {isMarked && <Check size={18} aria-hidden="true" />}
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="challenge-feedback" role="status" aria-live="polite">{notice}</p>
+
+        {isSongAnswerRevealed ? (
+          <button className="button button-primary challenge-submit" type="submit">
             Siguiente <ArrowRight size={18} aria-hidden="true" />
           </button>
         ) : (
@@ -197,34 +302,6 @@ export function LevelChallenge({ level, onSolved, isLastLevel }: LevelChallengeP
             Comprobar respuesta <Check size={18} aria-hidden="true" />
           </button>
         )}
-      </form>
-    );
-  }
-
-  if (level.kind === 'choice') {
-    return (
-      <form className="challenge-form" onSubmit={handleSubmit}>
-        <p className="challenge-prompt">{level.prompt}</p>
-        {level.hint && <p className="challenge-hint">{level.hint}</p>}
-        <div className="answer-options">
-          {level.options.map((option, index) => (
-            <button
-              className={`answer-option ${selected === option ? 'is-selected' : ''}`}
-              type="button"
-              aria-pressed={selected === option}
-              autoFocus={index === 0}
-              key={option}
-              onClick={() => { setSelected(option); setNotice(''); }}
-            >
-              <span>{option}</span>
-              {selected === option && <Check size={18} aria-hidden="true" />}
-            </button>
-          ))}
-        </div>
-        <p className="challenge-feedback" role="status" aria-live="polite">{notice}</p>
-        <button className="button button-primary challenge-submit" type="submit" disabled={!selected} data-sound="none">
-          Comporbar respuesta <Check size={18} aria-hidden="true" />
-        </button>
       </form>
     );
   }

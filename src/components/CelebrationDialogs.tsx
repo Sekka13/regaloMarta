@@ -70,7 +70,7 @@ export function FinalDialog({ open, onClose }: FinalDialogProps) {
           <p className="eyebrow">Siete Martas · un regalo final</p>
           <h2 id={titleId}>{appCopy.finalTitle}</h2>
           <p>{appCopy.finalMessage}</p>
-          <p className="final-submessage">La sorpresa final ya es tuya. ¡Que empiece la celebración!</p>
+          <p className="final-submessage">TE QUIERO ❤️</p>
           <button className="button button-gold continue-button" type="button" onClick={onClose}>
             ¡A celebrar! <Sparkles size={18} aria-hidden="true" />
           </button>

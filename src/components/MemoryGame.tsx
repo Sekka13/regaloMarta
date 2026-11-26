@@ -115,7 +115,7 @@ export function MemoryGame({ onGameComplete }: MemoryGameProps) {
       const isLastPair = currentLevelIndex === PAIRS_TOTAL;
 
       if (isLastPair) {
-        playSoundAndVibrate('victory_game' as SoundName);
+        
         setStatusMessage('¡Completado! Desbloqueando a Little...');
         
         schedule(() => {

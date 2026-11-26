@@ -81,11 +81,30 @@ export function GameDialog({ marta, completedLevels, celebrateUnlock, videosPaus
               <h2 id={titleId}>{marta.gameTitle}</h2>
               <p className="game-intro">{marta.gameIntro}</p>
               
-              {/* Ocultamos el medidor tradicional si estamos en el memory game o beauty */}
-              {marta.id !== 'little' && marta.id !== 'beauty' && (
+              {/* Ocultamos el medidor tradicional en memory game, beauty y music (para no adelantar el título de la canción) */}
+              {marta.id !== 'little' && marta.id !== 'beauty' && marta.id !== 'music' && (
                 <div className="level-meter">
                   <div className="level-meter-copy">
                     <span>{marta.levels[completedLevels]?.label ?? 'Pruebas'}</span>
+                    <span>Prueba {completedLevels + 1} de {marta.levels.length}</span>
+                  </div>
+                  <div
+                    className="level-meter-track"
+                    role="progressbar"
+                    aria-label={`Progreso de ${marta.name}`}
+                    aria-valuemin={0}
+                    aria-valuemax={marta.levels.length}
+                    aria-valuenow={completedLevels}
+                  >
+                    <span style={{ width: `${(completedLevels / marta.levels.length) * 100}%` }} />
+                  </div>
+                </div>
+              )}
+
+              {marta.id === 'music' && (
+                <div className="level-meter">
+                  <div className="level-meter-copy">
+                    <span>Canción misteriosa</span>
                     <span>Prueba {completedLevels + 1} de {marta.levels.length}</span>
                   </div>
                   <div

@@ -14,6 +14,8 @@ export type ChoiceLevel = {
   options: string[];
   answer: string;
   hint?: string;
+  songSrc?: string;
+  acceptAllOptions?: boolean;
 };
 
 export type WordLevel = {

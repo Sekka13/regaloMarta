@@ -34,10 +34,7 @@ export function CalendarBoard({ progress, revealMartaId, onOpenGift, onLocked }:
           <p className="eyebrow">24 sorpresas te esperan</p>
           <h2 id="calendar-heading">El tablero de regalos</h2>
         </div>
-        <div className="calendar-key" aria-label="Leyenda del tablero">
-          <span><Lock size={12} aria-hidden="true" /> Cerrada</span>
-          <span><Gift size={12} aria-hidden="true" /> Lista</span>
-        </div>
+
       </div>
 
       <ol className="calendar-grid" aria-label="Casillas del Martalendario">
